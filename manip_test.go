@@ -175,7 +175,7 @@ func TestNewPl(t *testing.T) {
 	f, err := pl.NewFn("a")
 	require.NoError(err)
 
-	plan, err := pl.NewPl(f)
+	pipeline := pl.NewPl(f)
 	require.NoError(err)
-	require.Equal(&pl.Pl{Funcs: []*pl.Fn{f}}, plan)
+	require.Equal(&pl.Pl{Funcs: []*pl.Fn{f}}, pipeline)
 }

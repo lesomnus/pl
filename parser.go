@@ -36,21 +36,6 @@ func (k *RefKey) String() string {
 	}
 }
 
-func NewRefKey[T string | int](key T) RefKey {
-	switch v := interface{}(key).(type) {
-	case string:
-		return RefKey{Name: &v}
-	case int:
-		return RefKey{Index: &v}
-	}
-
-	panic(key)
-}
-
-func K[T string | int](key T) RefKey {
-	return NewRefKey(key)
-}
-
 var plParser = participle.MustBuild[Pl](
 	participle.Unquote("String"),
 )

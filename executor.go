@@ -6,8 +6,6 @@ import (
 	"reflect"
 )
 
-type FuncMap map[string]any
-
 type fnNode struct {
 	name string
 	args []any
@@ -23,7 +21,7 @@ type Executor struct {
 
 func NewExecutor() *Executor {
 	return &Executor{
-		Funcs: make(FuncMap),
+		Funcs: NewFuncMap(),
 		Props: NewProps(M{}),
 		Convs: NewConvMap(),
 	}

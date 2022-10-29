@@ -16,62 +16,63 @@ func TestParse(t *testing.T) {
 		{
 			desc:  "function with reference arguments",
 			input: `(a $.b[1]["c-1"] $[2]["d-d"][3] $.e[4][f])`,
-			expected: must(pl.NewPl(
+			expected: pl.NewPl(
 				must(pl.NewFn("a",
 					must(pl.NewRef("b", 1, "c-1")),
 					must(pl.NewRef(2, "d-d", 3)),
 					must(pl.NewRef("e", 4, "f")),
 				)),
-			)),
+			),
 		},
 		{
 			desc:  "function with multiple arguments",
 			input: `(a "b" 42 $.a[1].b 3.14 "36")`,
-			expected: must(pl.NewPl(
+			expected: pl.NewPl(
 				must(pl.NewFn("a", "b", 42, must(pl.NewRef("a", 1, "b")), 3.14, "36")),
-			)),
+			),
 		},
 		{
 			desc:  "sequence of functions",
 			input: `(a "b" 42 3.14 "36" | c "d" 21)`,
-			expected: must(pl.NewPl(
+			expected: pl.NewPl(
 				must(pl.NewFn("a", "b", 42, 3.14, "36")),
 				must(pl.NewFn("c", "d", 21)),
-			)),
+			),
 		},
 		{
 			desc:  "nested function",
 			input: `(a "b" (c "d" 21) 3.14 "36")`,
-			expected: must(pl.NewPl(
-				must(pl.NewFn("a", "b", must(pl.NewPl(must(pl.NewFn("c", "d", 21)))), 3.14, "36")))),
+			expected: pl.NewPl(
+				must(pl.NewFn("a", "b", pl.NewPl(must(pl.NewFn("c", "d", 21))), 3.14, "36")),
+			),
 		},
 		{
 			desc:  "consecutive nested functions",
 			input: `(a "b" (c "d" 21) (e 3.14) 37)`,
-			expected: must(pl.NewPl(
+			expected: pl.NewPl(
 				must(pl.NewFn(
 					"a",
 					"b",
-					must(pl.NewPl(must(pl.NewFn("c", "d", 21)))),
-					must(pl.NewPl(must(pl.NewFn("e", 3.14)))),
+					pl.NewPl(must(pl.NewFn("c", "d", 21))),
+					pl.NewPl(must(pl.NewFn("e", 3.14))),
 					37,
 				)),
-			)),
+			),
 		},
 		{
 			desc:  "nested sequence of functions",
 			input: `(a "b" (c "d" 21 | e 3.14) 37)`,
-			expected: must(pl.NewPl(
+			expected: pl.NewPl(
 				must(pl.NewFn(
 					"a",
 					"b",
-					must(pl.NewPl(
+					pl.NewPl(
 						must(pl.NewFn("c", "d", 21)),
 						must(pl.NewFn("e", 3.14)),
-					)),
+					),
 					37,
 				)),
-			)),
+			),
 		},
 	}
 	for _, tc := range tcs {

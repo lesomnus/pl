@@ -1,4 +1,4 @@
-# *P*ipe*l*ine
+# *p*ipe*l*ine
 
 Single line expression inspired by pipeline in `text/template`. A pipeline is a sequence of functions separated by `|`. Functions can take arguments, and the result of the previous function is passed to the last argument of the next function. The first word of a pipeline element is the name of the function, and the following words become the function's arguments. Pipeline can be nested by wrapping them with `(...)` in argument position.
 
@@ -42,7 +42,7 @@ argument = string | number | reference | pipeline;
 identifier = letter { letter | digit | '_' }*;
 string     = '"', ? printable characters ?, '"';
 number     = integer | floating_point;
-reference  = "$", { reference_part }*;
+reference  = '$', { reference_part }*;
 
 integer        = [ '-' | '+' ], { digit }*;
 floating_point = integer, [ '.', { digit }* ];

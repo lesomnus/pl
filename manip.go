@@ -4,22 +4,17 @@ import (
 	"fmt"
 )
 
-func NewRef(entries ...interface{}) ([]RefKey, error) {
-	rst := make([]RefKey, len(entries))
+func NewPl(fs ...*Fn) *Pl {
+	return &Pl{Funcs: fs}
+}
 
-	for i, entry := range entries {
-		switch v := entry.(type) {
-		case string:
-			rst[i].Name = &v
-		case int:
-			rst[i].Index = &v
-
-		default:
-			return nil, fmt.Errorf("invalid type of argument at %d", i)
-		}
+func NewFn(name string, args ...interface{}) (*Fn, error) {
+	args_, err := NewArgs(args...)
+	if err != nil {
+		return nil, err
 	}
 
-	return rst, nil
+	return &Fn{Name: name, Args: args_}, nil
 }
 
 func NewArgs(args ...interface{}) ([]*Arg, error) {
@@ -48,15 +43,35 @@ func NewArgs(args ...interface{}) ([]*Arg, error) {
 	return rst, nil
 }
 
-func NewFn(name string, args ...interface{}) (*Fn, error) {
-	args_, err := NewArgs(args...)
-	if err != nil {
-		return nil, err
+func NewRef(entries ...interface{}) ([]RefKey, error) {
+	rst := make([]RefKey, len(entries))
+
+	for i, entry := range entries {
+		switch v := entry.(type) {
+		case string:
+			rst[i].Name = &v
+		case int:
+			rst[i].Index = &v
+
+		default:
+			return nil, fmt.Errorf("invalid type of argument at %d", i)
+		}
 	}
 
-	return &Fn{Name: name, Args: args_}, nil
+	return rst, nil
 }
 
-func NewPl(fs ...*Fn) (*Pl, error) {
-	return &Pl{Funcs: fs}, nil
+func NewRefKey[T string | int](key T) RefKey {
+	switch v := interface{}(key).(type) {
+	case string:
+		return RefKey{Name: &v}
+	case int:
+		return RefKey{Index: &v}
+	}
+
+	panic(key)
+}
+
+func K[T string | int](key T) RefKey {
+	return NewRefKey(key)
 }
