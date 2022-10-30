@@ -14,6 +14,13 @@ func TestParse(t *testing.T) {
 		expected *pl.Pl
 	}{
 		{
+			desc:  "function without arguments",
+			input: `(a)`,
+			expected: pl.NewPl(
+				must(pl.NewFn("a")),
+			),
+		},
+		{
 			desc:  "function with reference arguments",
 			input: `(a $.b[1]["c-1"] $[2]["d-d"][3] $.e[4][f])`,
 			expected: pl.NewPl(

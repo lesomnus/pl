@@ -139,7 +139,7 @@ func TestNewFunc(t *testing.T) {
 			desc:     "without args",
 			name:     "Dio",
 			args:     []interface{}{},
-			expected: &pl.Fn{Name: "Dio", Args: []*pl.Arg{}},
+			expected: &pl.Fn{Name: "Dio", Args: nil},
 		},
 		{
 			desc: "with args",

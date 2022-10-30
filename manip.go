@@ -9,6 +9,10 @@ func NewPl(fs ...*Fn) *Pl {
 }
 
 func NewFn(name string, args ...interface{}) (*Fn, error) {
+	if len(args) == 0 {
+		return &Fn{Name: name}, nil
+	}
+
 	args_, err := NewArgs(args...)
 	if err != nil {
 		return nil, err
