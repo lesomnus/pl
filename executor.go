@@ -164,9 +164,33 @@ func (e *Executor) invokeFn(fn any, args []any) (any, error) {
 			continue
 		}
 
-		v, err := e.Convs.Convert(t_in, t_arg, reflect.ValueOf(arg))
+		v_arg := reflect.ValueOf(arg)
+		v, err := e.Convs.Convert(t_in, t_arg, v_arg)
 		if err != nil {
-			return nil, fmt.Errorf("arg[%d]: %w", i, err)
+			// Try to call String() if parameter type is string.
+			s, ok := func() (string, bool) {
+				if t_in.Kind() != reflect.String {
+					return "", false
+				}
+
+				if s, ok := v_arg.Interface().(interface{ String() string }); ok {
+					return s.String(), true
+				}
+
+				p := reflect.New(t_arg)
+				p.Elem().Set(v_arg)
+
+				if s, ok := p.Interface().(interface{ String() string }); ok {
+					return s.String(), true
+				} else {
+					return "", false
+				}
+			}()
+			if !ok {
+				return nil, fmt.Errorf("arg[%d]: %w", i, err)
+			}
+
+			v = s
 		}
 
 		input_args[i] = reflect.ValueOf(v)

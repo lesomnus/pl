@@ -3,7 +3,9 @@ package pl
 import (
 	"errors"
 	"strconv"
+	"strings"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 )
@@ -144,6 +146,23 @@ func TestExecutorInvoke(t *testing.T) {
 			rst:  "42",
 		},
 		{
+			desc: "invoke a function with implicit conversion to string if method String() of exists",
+			fn:   func(v string) string { return v },
+			args: []any{time.Date(1995, 11, 12, 22, 4, 0, 0, time.FixedZone("UTC-7", -7*50*50))},
+			rst:  "1995-11-12 22:04:00 -0451 UTC-7",
+		},
+		{
+			desc: "invoke a function with implicit conversion to string if method String() of pointer to struct exists",
+			fn:   func(v string) string { return v },
+			args: []any{(func() strings.Builder {
+				sb := strings.Builder{}
+				sb.WriteString("Josuke")
+				sb.WriteString(" Higashikata")
+				return sb
+			})()},
+			rst: "Josuke Higashikata",
+		},
+		{
 			desc: "function can returns an error",
 			fn:   func() (string, error) { return "Zoidberg", nil },
 			args: []any{},
@@ -208,6 +227,12 @@ func TestExecutorInvoke(t *testing.T) {
 				fn:   func() (string, error) { return "Hubert", errors.New("Farnsworth") },
 				args: []any{},
 				msg:  "Farnsworth",
+			},
+			{
+				desc: "invoke a function with implicit conversion to string if method String() not exists",
+				fn:   func(v string) string { return v },
+				args: []any{errors.New("Cronenbergs")},
+				msg:  "arg[0]",
 			},
 		}
 		for _, tc := range tcs {
