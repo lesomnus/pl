@@ -1,5 +1,9 @@
 # *p*ipe*l*ine
 
+[![test](https://github.com/lesomnus/pl/actions/workflows/test.yaml/badge.svg)](https://github.com/lesomnus/pl/actions/workflows/test.yaml)
+[![Go Report Card](https://goreportcard.com/badge/github.com/lesomnus/pl)](https://goreportcard.com/report/github.com/lesomnus/pl)
+[![codecov](https://codecov.io/gh/lesomnus/pl/branch/main/graph/badge.svg?token=PJ3sRR1Ms0)](https://codecov.io/gh/lesomnus/pl)
+
 Single line expression inspired by pipeline in `text/template`. A pipeline is a sequence of functions separated by `|`. Functions can take arguments, and the result of the previous function is passed to the last argument of the next function. The first word of a pipeline element is the name of the function, and the following words become the function's arguments. Pipeline can be nested by wrapping them with `(...)` in argument position.
 
 ## Usage
