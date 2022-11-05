@@ -18,9 +18,8 @@ executor.Funcs["sum"] = func(vs ...int) int {
 
 	return rst
 }
-executor.Props.Set(pl.K("answer"), 42)
 
-rst, err := executor.ExecuteExpr("(sum 1 2 (sum 3 | sum (sum $.answer 5) 6) 7 (sum 8) | sum 9 10)")
+rst, err := executor.ExecuteExpr("(sum 1 2 (sum 3 | sum (sum $.answer 5) 6) 7 (sum 8) | sum 9 10)", struct{ Answer int }{Answer: 42})
 if err != nil {
 	panic(err)
 }
