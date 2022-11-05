@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/lesomnus/pl"
+	"github.com/lesomnus/pl/funcs"
 	"github.com/stretchr/testify/require"
 )
 
@@ -24,6 +25,15 @@ func TestFuncMapDefaultFunctions(t *testing.T) {
 			desc:     "printf",
 			input:    &pl.Fn{Name: "printf", Args: must(pl.NewArgs("%s %d %.2f", "a", 42, 3.14))},
 			expected: []any{"a 42 3.14"},
+		},
+		{
+			desc:  "regex",
+			input: &pl.Fn{Name: "regex", Args: must(pl.NewArgs(`foo([a-zA-Z]+)baz`, "foobarbaz"))},
+			expected: []any{&funcs.RegexMatch{
+				Source:  "foobarbaz",
+				ByIndex: []string{"bar"},
+				ByName:  make(map[string]string),
+			}},
 		},
 	}
 	for _, tc := range tcs {

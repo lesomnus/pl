@@ -1,20 +1,15 @@
 package pl
 
-import "fmt"
+import (
+	"github.com/lesomnus/pl/funcs"
+)
 
 type FuncMap map[string]any
 
 func NewFuncMap() FuncMap {
 	return FuncMap{
-		"pass":   fnPass,
-		"printf": fnPrintf,
+		"pass":   funcs.Pass,
+		"printf": funcs.Printf,
+		"regex":  funcs.Regex,
 	}
-}
-
-func fnPass(vs ...any) []any {
-	return vs
-}
-
-func fnPrintf(format string, vs ...any) string {
-	return fmt.Sprintf(format, vs...)
 }

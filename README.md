@@ -43,7 +43,7 @@ function = name, { { ' ' }*, argument };
 name     = identifier;
 argument = string | number | reference | pipeline;
 
-identifier = letter { letter | digit | '_' }*;
+identifier = letter, { letter | digit | '_' }*;
 string     = '"', ? printable characters ?, '"';
 number     = integer | floating_point;
 reference  = '$', { reference_part }*;
