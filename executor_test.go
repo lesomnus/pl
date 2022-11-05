@@ -11,13 +11,13 @@ import (
 )
 
 func TestExecutorEvaluateFn(t *testing.T) {
-	executor := Executor{
-		Props: NewProps(M{
-			"a": A{M{
-				"b": "foo",
-			}},
-		}),
+	data := map[string]any{
+		"a": []map[string]string{{
+			"b": "foo",
+		}},
 	}
+
+	executor := Executor{}
 
 	t.Run("resolve arguments from args", func(t *testing.T) {
 		require := require.New(t)
@@ -30,7 +30,7 @@ func TestExecutorEvaluateFn(t *testing.T) {
 
 		fn := &Fn{Name: "fn", Args: args}
 
-		node, err := executor.evaluateFn(fn)
+		node, err := executor.evaluateFn(fn, data)
 		require.NoError(err)
 		require.Equal("fn", node.name)
 		require.ElementsMatch([]any{"string", 3.14, 42, "foo", &Pl{}}, node.args)
@@ -47,7 +47,7 @@ func TestExecutorEvaluateFn(t *testing.T) {
 
 		fn := &Fn{Name: "fn", Args: args}
 
-		_, err = executor.evaluateFn(fn)
+		_, err = executor.evaluateFn(fn, data)
 		require.Error(err)
 		require.ErrorContains(err, "arg[1]")
 		require.ErrorContains(err, "reference")
@@ -63,7 +63,7 @@ func TestExecutorEvaluateFn(t *testing.T) {
 
 		fn := &Fn{Name: "fn", Args: args}
 
-		_, err = executor.evaluateFn(fn)
+		_, err = executor.evaluateFn(fn, data)
 		require.Error(err)
 		require.ErrorContains(err, "arg[2]")
 		require.ErrorContains(err, "empty")

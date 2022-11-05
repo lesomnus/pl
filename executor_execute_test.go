@@ -75,7 +75,7 @@ func TestExecutorExecute(t *testing.T) {
 		t.Run(tc.desc, func(t *testing.T) {
 			require := require.New(t)
 
-			rst, err := executor.Execute(tc.pl)
+			rst, err := executor.Execute(tc.pl, nil)
 			require.NoError(err)
 			require.ElementsMatch(tc.expected, rst)
 		})
@@ -112,8 +112,7 @@ func TestExecutorExecute(t *testing.T) {
 			t.Run(tc.desc, func(t *testing.T) {
 				require := require.New(t)
 
-				_, err := executor.Execute(tc.pl)
-				require.Error(err)
+				_, err := executor.Execute(tc.pl, nil)
 				for _, msg := range tc.msgs {
 					require.ErrorContains(err, msg)
 				}
@@ -136,7 +135,7 @@ func TestExecutorExecuteExpr(t *testing.T) {
 		},
 	}
 
-	rst, err := executor.ExecuteExpr(`(sum 1 2 (sum 3 | sum (sum 4 5) 6) 7 (sum 8) | sum 9 10)`)
+	rst, err := executor.ExecuteExpr(`(sum 1 2 (sum 3 | sum (sum 4 5) 6) 7 (sum 8) | sum 9 10)`, nil)
 	require.NoError(t, err)
 	require.Equal(t, []any{1 + 2 + 3 + 4 + 5 + 6 + 7 + 8 + 9 + 10}, rst)
 
@@ -144,8 +143,7 @@ func TestExecutorExecuteExpr(t *testing.T) {
 		require := require.New(t)
 
 		executor := pl.NewExecutor()
-		_, err := executor.ExecuteExpr("((sum 1 2))")
-		require.Error(err)
+		_, err := executor.ExecuteExpr("((sum 1 2))", nil)
 		require.ErrorContains(err, "unexpected token")
 	})
 }

@@ -22,17 +22,17 @@ func TestNewRef(t *testing.T) {
 	tcs := []struct {
 		desc     string
 		input    []interface{}
-		expected []pl.RefKey
+		expected pl.Ref
 	}{
 		{
 			desc:     "keys",
 			input:    []interface{}{"a", "b", "c"},
-			expected: []pl.RefKey{{Name: addr("a")}, {Name: addr("b")}, {Name: addr("c")}},
+			expected: pl.Ref{{Name: addr("a")}, {Name: addr("b")}, {Name: addr("c")}},
 		},
 		{
 			desc:  "indexes",
 			input: []interface{}{1, -2, 3},
-			expected: []pl.RefKey{
+			expected: pl.Ref{
 				{Index: addr(1)},
 				{Index: addr(-2)},
 				{Index: addr(3)},
@@ -75,8 +75,8 @@ func TestNewArgs(t *testing.T) {
 		},
 		{
 			desc:     "reference",
-			input:    []interface{}{[]pl.RefKey{{Name: addr("b")}, {Index: addr(1)}, {Name: addr("c")}}},
-			expected: []*pl.Arg{{Ref: []pl.RefKey{{Name: addr("b")}, {Index: addr(1)}, {Name: addr("c")}}}},
+			input:    []interface{}{pl.Ref{{Name: addr("b")}, {Index: addr(1)}, {Name: addr("c")}}},
+			expected: []*pl.Arg{{Ref: pl.Ref{{Name: addr("b")}, {Index: addr(1)}, {Name: addr("c")}}}},
 		},
 		{
 			desc: "nested function",

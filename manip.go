@@ -34,7 +34,7 @@ func NewArgs(args ...interface{}) ([]*Arg, error) {
 			rst[i].Float = &v
 		case int:
 			rst[i].Int = &v
-		case []RefKey:
+		case Ref:
 			rst[i].Ref = v
 		case *Pl:
 			rst[i].Nested = v
@@ -47,8 +47,8 @@ func NewArgs(args ...interface{}) ([]*Arg, error) {
 	return rst, nil
 }
 
-func NewRef(entries ...interface{}) ([]RefKey, error) {
-	rst := make([]RefKey, len(entries))
+func NewRef(entries ...interface{}) (Ref, error) {
+	rst := make(Ref, len(entries))
 
 	for i, entry := range entries {
 		switch v := entry.(type) {

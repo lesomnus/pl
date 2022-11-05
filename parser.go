@@ -19,7 +19,7 @@ type Arg struct {
 	String *string  `parser:"  @String"`
 	Float  *float64 `parser:"| @Float"`
 	Int    *int     `parser:"| @Int"`
-	Ref    []RefKey `parser:"| '$' @@+"`
+	Ref    Ref      `parser:"| '$' @@+"`
 	Nested *Pl      `parser:"| @@"`
 }
 
@@ -31,8 +31,10 @@ type RefKey struct {
 func (k *RefKey) String() string {
 	if k.Name != nil {
 		return fmt.Sprintf(".%s", *k.Name)
-	} else {
+	} else if k.Index != nil {
 		return fmt.Sprintf("[%d]", *k.Index)
+	} else {
+		return ".?"
 	}
 }
 

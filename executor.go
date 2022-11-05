@@ -15,28 +15,26 @@ type fnNode struct {
 
 type Executor struct {
 	Funcs FuncMap
-	Props Props
 	Convs ConvMap
 }
 
 func NewExecutor() *Executor {
 	return &Executor{
 		Funcs: NewFuncMap(),
-		Props: NewProps(M{}),
 		Convs: NewConvMap(),
 	}
 }
 
-func (e *Executor) ExecuteExpr(expr string) ([]any, error) {
+func (e *Executor) ExecuteExpr(expr string, data any) ([]any, error) {
 	pl, err := ParseString(expr)
 	if err != nil {
 		return nil, err
 	}
 
-	return e.Execute(pl)
+	return e.Execute(pl, data)
 }
 
-func (e *Executor) Execute(pl *Pl) ([]any, error) {
+func (e *Executor) Execute(pl *Pl, data any) ([]any, error) {
 	args_prev := []any{}
 	for i, fn := range pl.Funcs {
 		err := func() error {
@@ -45,7 +43,7 @@ func (e *Executor) Execute(pl *Pl) ([]any, error) {
 				return errors.New("not defined")
 			}
 
-			fnode, err := e.evaluateFn(fn)
+			fnode, err := e.evaluateFn(fn, data)
 			if err != nil {
 				return err
 			}
@@ -61,7 +59,7 @@ func (e *Executor) Execute(pl *Pl) ([]any, error) {
 						continue
 					}
 
-					rst, err := e.Execute(nested)
+					rst, err := e.Execute(nested, data)
 					if err != nil {
 						return fmt.Errorf("arg[%d]: %w", i, err)
 					}
@@ -98,7 +96,7 @@ func (e *Executor) Execute(pl *Pl) ([]any, error) {
 	return args_prev, nil
 }
 
-func (e *Executor) evaluateFn(fn *Fn) (*fnNode, error) {
+func (e *Executor) evaluateFn(fn *Fn, data any) (*fnNode, error) {
 	rst := &fnNode{name: fn.Name, args: make([]any, len(fn.Args))}
 	for i, arg := range fn.Args {
 		if arg.String != nil {
@@ -108,7 +106,7 @@ func (e *Executor) evaluateFn(fn *Fn) (*fnNode, error) {
 		} else if arg.Int != nil {
 			rst.args[i] = *arg.Int
 		} else if arg.Ref != nil {
-			arg, err := e.Props.Resolve(arg.Ref)
+			arg, err := Resolve(data, arg.Ref)
 			if err != nil {
 				return nil, fmt.Errorf("arg[%d]: reference: %w", i, err)
 			}

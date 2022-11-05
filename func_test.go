@@ -40,7 +40,7 @@ func TestFuncMapDefaultFunctions(t *testing.T) {
 		t.Run(tc.desc, func(t *testing.T) {
 			require := require.New(t)
 
-			rst, err := executor.Execute(pl.NewPl(tc.input))
+			rst, err := executor.Execute(pl.NewPl(tc.input), nil)
 			require.NoError(err)
 			require.Equal(tc.expected, rst)
 		})
