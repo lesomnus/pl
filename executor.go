@@ -123,6 +123,68 @@ func (e *Executor) evaluateFn(fn *Fn, data any) (*fnNode, error) {
 	return rst, nil
 }
 
+func (e *Executor) convert(out reflect.Type, in reflect.Type, v reflect.Value) (any, error) {
+	rst, err := e.Convs.Convert(out, in, v)
+	if err == nil {
+		return rst, nil
+	}
+
+	if !errors.Is(err, ErrNotFound) {
+		return nil, err
+	}
+
+	// Try to convert through string.
+	var (
+		to_string   func() (reflect.Value, error)      = nil
+		from_string func(v reflect.Value) (any, error) = nil
+	)
+
+	if out.Kind() == reflect.String {
+		from_string = func(v reflect.Value) (any, error) { return v.String(), nil }
+	} else if convs, ok := e.Convs[string_t]; !ok {
+		return nil, ErrNotFound
+	} else if conv, ok := convs[out]; !ok {
+		return nil, ErrNotFound
+	} else {
+		from_string = func(v reflect.Value) (any, error) { return conv(v) }
+	}
+
+	if in.Kind() == reflect.String {
+		// Already a string.
+		panic("e.Convs.Convert must be done before")
+	} else if convs, ok := e.Convs[in]; ok {
+		// Has conversion to string?
+		if conv, ok := convs[string_t]; ok {
+			to_string = func() (reflect.Value, error) {
+				rst, err := conv(v)
+				return reflect.ValueOf(rst), err
+			}
+		}
+	}
+
+	// No conversion to string found.
+	if to_string == nil {
+		// Has stringer?
+		if s, ok := v.Interface().(interface{ String() string }); ok {
+			to_string = func() (reflect.Value, error) { return reflect.ValueOf(s.String()), nil }
+		} else {
+			return nil, ErrNotFound
+		}
+	}
+
+	tmp, err := to_string()
+	if err != nil {
+		return nil, fmt.Errorf("failed to convert to intermediate type string from argument type: %w", err)
+	}
+
+	rst, err = from_string(tmp)
+	if err != nil {
+		return nil, fmt.Errorf("failed to convert to parameter type from intermediate type string: %w", err)
+	}
+
+	return rst, nil
+}
+
 func (e *Executor) invokeFn(fn any, args []any) (any, error) {
 	fv := reflect.ValueOf(fn)
 	ft := fv.Type()
@@ -163,32 +225,9 @@ func (e *Executor) invokeFn(fn any, args []any) (any, error) {
 		}
 
 		v_arg := reflect.ValueOf(arg)
-		v, err := e.Convs.Convert(t_in, t_arg, v_arg)
+		v, err := e.convert(t_in, t_arg, v_arg)
 		if err != nil {
-			// Try to call String() if parameter type is string.
-			s, ok := func() (string, bool) {
-				if t_in.Kind() != reflect.String {
-					return "", false
-				}
-
-				if s, ok := v_arg.Interface().(interface{ String() string }); ok {
-					return s.String(), true
-				}
-
-				p := reflect.New(t_arg)
-				p.Elem().Set(v_arg)
-
-				if s, ok := p.Interface().(interface{ String() string }); ok {
-					return s.String(), true
-				} else {
-					return "", false
-				}
-			}()
-			if !ok {
-				return nil, fmt.Errorf("arg[%d]: %w", i, err)
-			}
-
-			v = s
+			return nil, fmt.Errorf("arg[%d]: convert to %s from %s: %w", i, t_in.String(), t_arg.String(), err)
 		}
 
 		input_args[i] = reflect.ValueOf(v)

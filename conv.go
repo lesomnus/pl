@@ -1,10 +1,14 @@
 package pl
 
 import (
-	"fmt"
+	"errors"
 	"reflect"
 	"strconv"
 )
+
+var ErrNotFound = errors.New("not found")
+
+var string_t = reflect.TypeOf("")
 
 type ConvMap map[reflect.Type]map[reflect.Type](func(v reflect.Value) (any, error))
 
@@ -23,15 +27,39 @@ func NewConvMap() ConvMap {
 	return rst
 }
 
+func (m ConvMap) Set(from reflect.Type, to reflect.Type, conv func(v reflect.Value) (any, error)) {
+	tgt, ok := m[from]
+	if !ok {
+		tgt = make(map[reflect.Type]func(v reflect.Value) (any, error))
+		m[from] = tgt
+	}
+
+	tgt[to] = conv
+}
+
+func (m ConvMap) MergeWith(other ConvMap) {
+	for from, convs := range other {
+		tgt, ok := m[from]
+		if !ok {
+			tgt = make(map[reflect.Type]func(v reflect.Value) (any, error))
+			m[from] = tgt
+		}
+
+		for to, conv := range convs {
+			tgt[to] = conv
+		}
+	}
+}
+
 func (m ConvMap) Convert(out reflect.Type, in reflect.Type, v reflect.Value) (any, error) {
 	convs, ok := m[in]
 	if !ok {
-		return nil, fmt.Errorf("conversion for %s is not exists", in.String())
+		return nil, ErrNotFound
 	}
 
 	conv, ok := convs[out]
 	if !ok {
-		return nil, fmt.Errorf("conversion to %s from %s not exists", out.String(), in.String())
+		return nil, ErrNotFound
 	}
 
 	return conv(v)
