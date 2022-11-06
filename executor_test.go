@@ -2,6 +2,8 @@ package pl
 
 import (
 	"errors"
+	"fmt"
+	"reflect"
 	"strconv"
 	"strings"
 	"testing"
@@ -72,6 +74,12 @@ func TestExecutorEvaluateFn(t *testing.T) {
 
 func TestExecutorInvoke(t *testing.T) {
 	executor := Executor{Convs: defaultConversions}
+	executor.Convs.Set(string_t, reflect.TypeOf(float64(0)), func(v reflect.Value) (any, error) {
+		return strconv.ParseFloat(v.String(), 64)
+	})
+	executor.Convs.Set(reflect.TypeOf(float32(0)), string_t, func(v reflect.Value) (any, error) {
+		return nil, errors.New("fail")
+	})
 
 	sum := func(vs ...int) int {
 		rst := 0
@@ -146,21 +154,40 @@ func TestExecutorInvoke(t *testing.T) {
 			rst:  "42",
 		},
 		{
-			desc: "invoke a function with implicit conversion to string if method String() of exists",
+			desc: "invoke a function with implicit conversion to string if method (struct) String() by struct exists",
 			fn:   func(v string) string { return v },
-			args: []any{time.Date(1995, 11, 12, 22, 4, 0, 0, time.FixedZone("UTC-7", -7*50*50))},
-			rst:  "1995-11-12 22:04:00 -0451 UTC-7",
+			args: []any{time.Date(1955, 11, 12, 22, 4, 0, 0, time.FixedZone("UTC-7", -7*50*50))},
+			rst:  "1955-11-12 22:04:00 -0451 UTC-7",
 		},
 		{
-			desc: "invoke a function with implicit conversion to string if method String() of pointer to struct exists",
+			desc: "invoke a function with implicit conversion to string if method (struct) String() by pointer to struct exists",
 			fn:   func(v string) string { return v },
-			args: []any{(func() strings.Builder {
+			args: []any{(func() *time.Time {
+				d := time.Date(1955, 11, 12, 22, 4, 0, 0, time.FixedZone("UTC-7", -7*50*50))
+				return &d
+			})()},
+			rst: "1955-11-12 22:04:00 -0451 UTC-7",
+		},
+		{
+			desc: "invoke a function with implicit conversion to string if method (*struct) String() by pointer to struct exists",
+			fn:   func(v string) string { return v },
+			args: []any{(func() *strings.Builder {
 				sb := strings.Builder{}
 				sb.WriteString("Josuke")
 				sb.WriteString(" Higashikata")
-				return sb
+				return &sb
 			})()},
 			rst: "Josuke Higashikata",
+		},
+		{
+			desc: "invoke a function with intermediate conversion",
+			fn:   func(v float64) string { return fmt.Sprintf("%.2f", v) },
+			args: []any{(func() *strings.Builder {
+				sb := strings.Builder{}
+				sb.WriteString("3.14")
+				return &sb
+			})()},
+			rst: "3.14",
 		},
 		{
 			desc: "function can returns an error",
@@ -184,55 +211,90 @@ func TestExecutorInvoke(t *testing.T) {
 			desc string
 			fn   any
 			args []any
-			msg  string
+			msgs []string
 		}{
 			{
 				desc: "return nothing",
 				fn:   func() {},
 				args: []any{},
-				msg:  "one or two",
+				msgs: []string{"one or two"},
 			},
 			{
 				desc: "return more than two values",
 				fn:   func() (int, string, error) { return 42, "morty", nil },
 				args: []any{},
-				msg:  "one or two",
+				msgs: []string{"one or two"},
 			},
 			{
 				desc: "return two values without error type",
 				fn:   func() (int, string) { return 21, "rick" },
 				args: []any{},
-				msg:  "error",
+				msgs: []string{"error"},
 			},
 			{
 				desc: "number of arguments not fit",
 				fn:   func(int) int { return 41 },
 				args: []any{31, 53},
-				msg:  "args are given",
+				msgs: []string{"args are given"},
 			},
 			{
 				desc: "number of arguments not fit to a variadic function",
 				fn:   func(int, string, ...int) int { return 31 },
 				args: []any{55},
-				msg:  "at least",
+				msgs: []string{"at least"},
 			},
 			{
 				desc: "invalid type of argument",
 				fn:   func(int, int) int { return 4 },
 				args: []any{1055, "bender"},
-				msg:  "arg[1]",
+				msgs: []string{"arg[1]"},
 			},
 			{
 				desc: "function can returns an error",
 				fn:   func() (string, error) { return "Hubert", errors.New("Farnsworth") },
 				args: []any{},
-				msg:  "Farnsworth",
+				msgs: []string{"Farnsworth"},
+			},
+			{
+				desc: "invoke a function with implicit conversion fails",
+				fn:   func(v float64) string { return "" },
+				args: []any{"pi"},
+				msgs: []string{"arg[0]"},
 			},
 			{
 				desc: "invoke a function with implicit conversion to string if method String() not exists",
 				fn:   func(v string) string { return v },
 				args: []any{errors.New("Cronenbergs")},
-				msg:  "arg[0]",
+				msgs: []string{"arg[0]"},
+			},
+			{
+				desc: "invoke a function with implicit conversion to string if method (*struct) String() by struct exists",
+				fn:   func(v string) string { return v },
+				args: []any{(func() strings.Builder {
+					sb := strings.Builder{}
+					sb.WriteString("Josuke")
+					sb.WriteString(" Higashikata")
+					return sb
+				})()},
+				msgs: []string{"not found"},
+			},
+			{
+				// float32->string fails.
+				desc: "invoke a function with intermediate conversion to fails",
+				fn:   func(v float64) string { return "" },
+				args: []any{float32(3.14)},
+				msgs: []string{"to intermediate"},
+			},
+			{
+				// strings.Builder->string OK, string->float64 fails.
+				desc: "invoke a function with intermediate conversion from fails",
+				fn:   func(v float64) string { return "" },
+				args: []any{(func() *strings.Builder {
+					sb := strings.Builder{}
+					sb.WriteString("Pi")
+					return &sb
+				})()},
+				msgs: []string{"from intermediate"},
 			},
 		}
 		for _, tc := range tcs {
@@ -241,7 +303,9 @@ func TestExecutorInvoke(t *testing.T) {
 
 				_, err := executor.invokeFn(tc.fn, tc.args)
 				require.Error(err)
-				require.ErrorContains(err, tc.msg)
+				for _, msg := range tc.msgs {
+					require.ErrorContains(err, msg)
+				}
 			})
 		}
 	})
