@@ -156,17 +156,17 @@ func TestExecutorInvoke(t *testing.T) {
 		{
 			desc: "invoke a function with implicit conversion to string if method (struct) String() by struct exists",
 			fn:   func(v string) string { return v },
-			args: []any{time.Date(1995, 11, 12, 22, 4, 0, 0, time.FixedZone("UTC-7", -7*50*50))},
-			rst:  "1995-11-12 22:04:00 -0451 UTC-7",
+			args: []any{time.Date(1955, 11, 12, 22, 4, 0, 0, time.FixedZone("UTC-7", -7*50*50))},
+			rst:  "1955-11-12 22:04:00 -0451 UTC-7",
 		},
 		{
 			desc: "invoke a function with implicit conversion to string if method (struct) String() by pointer to struct exists",
 			fn:   func(v string) string { return v },
 			args: []any{(func() *time.Time {
-				d := time.Date(1995, 11, 12, 22, 4, 0, 0, time.FixedZone("UTC-7", -7*50*50))
+				d := time.Date(1955, 11, 12, 22, 4, 0, 0, time.FixedZone("UTC-7", -7*50*50))
 				return &d
 			})()},
-			rst: "1995-11-12 22:04:00 -0451 UTC-7",
+			rst: "1955-11-12 22:04:00 -0451 UTC-7",
 		},
 		{
 			desc: "invoke a function with implicit conversion to string if method (*struct) String() by pointer to struct exists",
